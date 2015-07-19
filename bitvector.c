@@ -6,7 +6,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "bitvector.h"
 
@@ -24,7 +26,8 @@ bv_create(elem_t _size)
                    sizeof(uint8_t) * size;
     bv = (struct bit_vector *) bv_malloc(msize);
     if (bv != NULL) {
-        bv->size = size;
+        bv->size = _size;
+        memset(bv->arr, 0, sizeof(uint8_t) * size);
     }
     return bv;
 }
@@ -38,15 +41,19 @@ bv_destroye(struct bit_vector* bv)
 void
 bv_set(struct bit_vector* bv, elem_t index, bool val)
 {
+    assert(index <= bv->size);
     int bit_index = index & 7U;
     int byte_index = index >> 3;
-    int n = bv->arr[byte_index] | (1 << (bit_index - 1));    
-    bv->arr[byte_index] = n & (val << (bit_index - 1));
+    int n = bv->arr[byte_index] & ~(1 << (bit_index));
+    printf("[%d][%d] %d => %d\n",
+           byte_index, bit_index, n, (n | ( val << (bit_index))));
+    bv->arr[byte_index] = n | (val << (bit_index));
 }
 
 bool
 bv_value(struct bit_vector* bv, elem_t index)
 {
+    assert(index <= bv->size);
     return (bv->arr[(index >> 3)] >> (index & 7U));
 }
 

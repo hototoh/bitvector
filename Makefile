@@ -2,11 +2,14 @@ CC=gcc
 CFLAGS= -Wall -O3 -msse4.2 -std=c99
 
 .PHONY: clean all
-all: libbv
+all: libbv test_bitvector
 
 .SUFFIXES: .c .o
 .c.o:
 	$(CC) $(CFLAGS) -c $<
+
+test_bitvector: libbv.a test_bitvector.o
+	$(CC) $(CFLAGS) $^ -o $@
 
 libbv: bitvector.o
 	$(AR) rcs $@.a $<

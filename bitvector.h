@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #define BV_ROUNDUP8(x) (((x) + 7UL) & (~7UL))
+#define BV_ROUNDUP16(x) (((x) + 15UL) & (~15UL))
 #define BV_ROUNDUP32(x) (((x) + 31UL) & (~31UL))
 #define BV_ROUNDUP64(x) (((x) + 63UL) & (~63UL))
 #define BV_ROUNDUP128(x) (((x) + 127UL) & (~127UL))
