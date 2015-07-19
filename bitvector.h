@@ -27,7 +27,7 @@ struct bit_vector*
 bv_create(elem_t size);
 
 void
-bv_destroye(struct bit_vector* bv);
+bv_destroy(struct bit_vector* bv);
  
 void
 bv_set(struct bit_vector* bv, elem_t index, bool val);

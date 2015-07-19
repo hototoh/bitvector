@@ -39,11 +39,12 @@ bv_print(struct bit_vector* bv)
 {
     printf("bit_vector: %p size : %lu\n"
            "arr       : %p\n", bv, bv->size, bv->arr);
-    for (int i = bv->size - 1; i >= 0; --i) {
+    int size = bv->size / 8 - 1 + (bv->size % 8 ? 1 : 0);
+    for (int i = size; i >= 0; --i) {
         uint8_t val = bv->arr[i];
         for (int j = 7; j >= 0; --j) 
             printf("%u", val >> j & 1);
-        if ((i & 3) == 3) 
+        if (!(i & 3)) 
             printf("\n");
         else
             printf(" ");
@@ -55,21 +56,19 @@ int
 main()
 {
     macro_test();
-    
-    {
-        struct bit_vector* bv = bv_create(15);
+
+    for (int i = 0; i <= 1024 * 32; i++) {
+        int size = i;
+        struct bit_vector* bv = bv_create(size);
         assert(bv != NULL);
-        bv_print(bv);
-        for (int i = 0; i < 15; ++i) {
-            printf("set %dth bit true\n", i);
-            bv_set(bv, i, true);
-            bv_print(bv);
-        }
-        for (int i = 0; i < 15; ++i) {
-            printf("set %dth bit false\n", i);
-            bv_set(bv, i, false);
-            bv_print(bv);
+        for (int j = 0; j < size; ++j) {
+            bv_set(bv, j, true);
         }
         bv_print(bv);
+        for (int j = 0; j < size; ++j) {
+            bv_set(bv, j, false);
+        }
+        bv_destroy(bv);
     }
+
 }
