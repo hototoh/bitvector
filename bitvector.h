@@ -16,7 +16,9 @@
 typedef size_t elem_t;
 
 struct bit_vector {
-    // allocated bit vector byte size
+    // allocated array size
+    elem_t allocated;
+    // available bit length
     elem_t size; 
     
     // bit vector body

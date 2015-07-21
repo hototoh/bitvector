@@ -25,10 +25,12 @@ bv_create(elem_t _size)
     size_t msize = sizeof(struct bit_vector) +
                    sizeof(uint8_t) * size;
     bv = (struct bit_vector *) bv_malloc(msize);
-    if (bv != NULL) {
-        bv->size = _size;
-        memset(bv->arr, 0, sizeof(uint8_t) * size);
-    }
+    if (bv != NULL) return NULL;
+
+    bv->allocated = size;
+    bv->size = _size;
+    memset(bv->arr, 0, sizeof(uint8_t) * size);
+
     return bv;
 }
 
