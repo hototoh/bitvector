@@ -118,5 +118,42 @@ bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
     return bv3;
 }
 
+void
+_bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    int count = min(bv1->size, bv2->size);
+ 
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+ 
+    for (int i = 0; i < count; i++) {
+        arr1[i] &= arr2[i];
+    }
+}
 
+void
+_bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    int count = min(bv1->size, bv2->size);
+ 
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+ 
+    for (int i = 0; i < count; i++) {
+        arr1[i] |= arr2[i];
+    }
+}
+
+void
+_bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    int count = min(bv1->size, bv2->size);
+ 
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+ 
+    for (int i = 0; i < count; i++) {
+        arr1[i] ^= arr2[i];
+    }
+}
 

@@ -47,13 +47,13 @@ bv_or(struct bit_vector* bv1, struct bit_vector* bv2);
 struct bit_vector*
 bv_xor(struct bit_vector* bv1, struct bit_vector* bv2);
 
-struct bit_vector*
-bv_plus(struct bit_vector* bv1, struct bit_vector* bv2);
+void
+_bv_and(struct bit_vector* bv1, struct bit_vector* bv2);
 
-struct bit_vector*
-bv_minus(struct bit_vector* bv1, struct bit_vector* bv2);
+void
+_bv_or(struct bit_vector* bv1, struct bit_vector* bv2);
 
-
-
+void
+_bv_xor(struct bit_vector* bv1, struct bit_vector* bv2);
 
 #endif
