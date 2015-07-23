@@ -10,22 +10,22 @@
 #include <errno.h>
 #include <assert.h>
 
+#include "common.h"
+#include "bit_utils.h"
 #include "bitvector.h"
 
 #define bv_malloc malloc
 #define bv_free free
-#define max(x, y) x < y ? y : x 
-#define min(x, y) x < y ? x : y 
 
 struct bit_vector*
 bv_create(elem_t _size)
 {
     struct bit_vector *bv;
-    elem_t size = BV_ROUNDUP128(_size / 8);
+    elem_t size = ROUNDUP128((ROUNDUP8(_size) >> 3));
     size_t msize = sizeof(struct bit_vector) +
                    sizeof(uint8_t) * size;
     bv = (struct bit_vector *) bv_malloc(msize);
-    if (bv != NULL) return NULL;
+    if (bv == NULL) return NULL;
 
     bv->allocated = size;
     bv->size = _size;
@@ -70,6 +70,20 @@ bv_not(struct bit_vector* bv1)
         arr2[i] = ~arr1[i];
     }
     return bv2;
+}
+
+int
+bv_ffs(struct bit_vector* bv)
+{
+    elem_t count = bv->allocated >> 3;
+    uint8_t *arr = bv->arr;
+    for (int i = 0; i < count; i++) {
+        uint64_t cur = *(uint64_t*)(arr + (i << 3));
+        int lsb = ffsll(cur);
+        //LOG (INFO, "i=%d ffsll(%llu) = %d\n", i, cur, lsb);
+        if (unlikely(lsb)) return lsb-1 + (i << 6);
+    }
+    return -1;
 }
 
 struct bit_vector*
