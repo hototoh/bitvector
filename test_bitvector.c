@@ -36,24 +36,6 @@ macro_test()
     assert(ROUNDUP128(129) == 256);
 }
 
-void
-bv_print(struct bit_vector* bv)
-{
-    LOG(INFO, "bit_vector: %p size : %lu\n"
-        "arr       : %p\n", bv, bv->size, bv->arr);
-    int size = bv->size / 8 - 1 + (bv->size % 8 ? 1 : 0);
-    for (int i = size; i >= 0; --i) {
-        uint8_t val = bv->arr[i];
-        for (int j = 7; j >= 0; --j) 
-            printf("%u", val >> j & 1);
-        if (!(i & 3)) 
-            printf("\n");
-        else
-            printf(" ");
-    }
-    printf("\n");
-}
-
 int
 main()
 {

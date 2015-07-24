@@ -1,5 +1,7 @@
 /**
- * Hiroshi Tokaku <tkk@hongo.wide.ad.jp>
+ *  bitvector.c
+ *  
+ *  Hiroshi Tokaku <tkk@hongo.wide.ad.jp>
  **/
 
 #include <stdio.h>
@@ -38,6 +40,24 @@ void
 bv_destroy(struct bit_vector* bv)
 {
     bv_free(bv);
+}
+
+void
+bv_print(struct bit_vector* bv)
+{
+    LOG(INFO, "bit_vector: %p size : %lu\n"
+        "arr       : %p\n", bv, bv->size, bv->arr);
+    int size = (bv->size >> 3) - 1 + ((bv->size & 7U) ? 1 : 0);
+    for (int i = size; i >= 0; --i) {
+        uint8_t val = bv->arr[i];
+        for (int j = 7; j >= 0; --j) 
+            printf("%u", val >> j & 1);
+        if (!(i & 3)) 
+            printf("\n");
+        else
+            printf(" ");
+    }
+    printf("\n");
 }
  
 void

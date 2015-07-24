@@ -1,3 +1,8 @@
+/**
+ *  bitvector.h
+ * 
+ *  Hiroshi Tokaku <tkk@hongo.wide.ad.jp>
+ **/
 #ifndef BITVECTOR_H
 #define BITVECTOR_H
 
@@ -21,6 +26,9 @@ bv_create(elem_t size);
 
 void
 bv_destroy(struct bit_vector* bv);
+
+void
+bv_print(struct bit_vector* bv);
  
 void
 bv_set(struct bit_vector* bv, elem_t index, bool val);
