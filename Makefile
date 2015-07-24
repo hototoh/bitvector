@@ -8,7 +8,7 @@ all: libbv test_bitvector
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
-test_bitvector: libbv.a test_bitvector.o
+test_bitvector: test_bitvector.o libbv.a 
 	$(CC) $(CFLAGS) $^ -o $@
 
 libbv: bitvector.o
