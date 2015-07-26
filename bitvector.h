@@ -22,7 +22,7 @@ struct bit_vector {
 };
 
 struct bit_vector*
-bv_create(elem_t size);
+bv_create(elem_t bit_size);
 
 void
 bv_destroy(struct bit_vector* bv);

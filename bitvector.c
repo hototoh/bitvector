@@ -20,17 +20,17 @@
 #define bv_free free
 
 struct bit_vector*
-bv_create(elem_t _size)
+bv_create(elem_t bit_size)
 {
     struct bit_vector *bv;
-    elem_t size = ROUNDUP128((ROUNDUP8(_size) >> 3));
+    elem_t size = ROUNDUP128((ROUNDUP8(bit_size) >> 3));
     size_t msize = sizeof(struct bit_vector) +
                    sizeof(uint8_t) * size;
     bv = (struct bit_vector *) bv_malloc(msize);
     if (bv == NULL) return NULL;
 
     bv->allocated = size;
-    bv->size = _size;
+    bv->size = bit_size;
     memset(bv->arr, 0, sizeof(uint8_t) * size);
 
     return bv;
@@ -109,13 +109,14 @@ bv_ffs(struct bit_vector* bv)
 struct bit_vector*
 bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->size, bv2->size);
-    struct bit_vector* bv3 = bv_create(count);
+    elem_t bit_size = min(bv1->size, bv2->size);
+    struct bit_vector* bv3 = bv_create(bit_size);
     if (bv3 == NULL) return NULL;
 
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
     uint8_t *arr3 = bv3->arr;
+    int count = bv3->allocated;
     for (int i = 0; i < count; i++) {
         arr3[i] = arr1[i] & arr2[i];
     }
@@ -125,13 +126,14 @@ bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
 struct bit_vector*
 bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->size, bv2->size);
-    struct bit_vector* bv3 = bv_create(count);
+    elem_t bit_size = min(bv1->size, bv2->size);
+    struct bit_vector* bv3 = bv_create(bit_size);
     if (bv3 == NULL) return NULL;
 
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
     uint8_t *arr3 = bv3->arr;
+    int count = bv3->allocated;
     for (int i = 0; i < count; i++) {
         arr3[i] = arr1[i] | arr2[i];
     }
@@ -141,13 +143,14 @@ bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
 struct bit_vector*
 bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->size, bv2->size);
-    struct bit_vector* bv3 = bv_create(count);
+    elem_t bit_size = min(bv1->size, bv2->size);
+    struct bit_vector* bv3 = bv_create(bit_size);
     if (bv3 == NULL) return NULL;
 
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
     uint8_t *arr3 = bv3->arr;
+    int count = bv3->allocated;
     for (int i = 0; i < count; i++) {
         arr3[i] = arr1[i] ^ arr2[i];
     }
@@ -157,7 +160,7 @@ bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
 void
 _bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->size, bv2->size);
+    int count = min(bv1->allocated, bv2->allocated) >> 3;
  
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
@@ -170,7 +173,7 @@ _bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
 void
 _bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->size, bv2->size);
+    int count = min(bv1->allocated, bv2->allocated) >> 3;
  
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
@@ -183,7 +186,7 @@ _bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
 void
 _bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->size, bv2->size);
+    int count = min(bv1->allocated, bv2->allocated) >> 3;
  
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
