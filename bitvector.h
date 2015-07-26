@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "prefetch.h"
 
 typedef size_t elem_t;
 
@@ -20,6 +21,9 @@ struct bit_vector {
     // bit vector body
     uint8_t arr[0] __attribute__((aligned(16)));
 };
+
+void
+bv_prefetch(struct bit_vector* bv);
 
 struct bit_vector*
 bv_create(elem_t bit_size);
@@ -60,5 +64,17 @@ _bv_or(struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
 _bv_xor(struct bit_vector* bv1, struct bit_vector* bv2);
+
+void
+__bv_and(struct bit_vector* dst,
+         struct bit_vector* bv1, struct bit_vector* bv2);
+
+void
+__bv_oror(struct bit_vector* dst,
+         struct bit_vector* bv1, struct bit_vector* bv2);
+
+void
+__bv_xor(struct bit_vector* dst,
+         struct bit_vector* bv1, struct bit_vector* bv2);
 
 #endif

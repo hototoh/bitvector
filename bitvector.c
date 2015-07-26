@@ -15,6 +15,7 @@
 #include "common.h"
 #include "bit_utils.h"
 #include "bitvector.h"
+#include "prefetch.h"
 
 #define bv_malloc malloc
 #define bv_free free
@@ -43,23 +44,14 @@ bv_destroy(struct bit_vector* bv)
 }
 
 void
-bv_print(struct bit_vector* bv)
+bv_prefetch(struct bit_vector* bv)
 {
-    LOG(INFO, "bit_vector: %p size : %lu\n"
-        "arr       : %p\n", bv, bv->size, bv->arr);
-    int size = (bv->size >> 3) - 1 + ((bv->size & 7U) ? 1 : 0);
-    for (int i = size; i >= 0; --i) {
-        uint8_t val = bv->arr[i];
-        for (int j = 7; j >= 0; --j) 
-            printf("%u", val >> j & 1);
-        if (!(i & 3)) 
-            printf("\n");
-        else
-            printf(" ");
-    }
-    printf("\n");
+    uint8_t* arr = bv->arr;
+    elem_t allocated = bv->allocated;
+    for (int i = 0; i < allocated; i += 8) 
+        rte_prefetch2(arr+i);
 }
- 
+
 void
 bv_set(struct bit_vector* bv, elem_t index, bool val)
 {
@@ -194,5 +186,59 @@ _bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
     for (int i = 0; i < count; i++) {
         arr1[i] ^= arr2[i];
     }
+}
+
+void
+__bv_and(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+    uint8_t *arr3 = dst->arr;
+    int count = dst->allocated;
+    for (int i = 0; i < count; i++) {
+        arr3[i] = arr1[i] & arr2[i];
+    }
+}
+
+void
+__bv_oror(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+    uint8_t *arr3 = dst->arr;
+    int count = dst->allocated;
+    for (int i = 0; i < count; i++) {
+        arr3[i] = arr1[i] | arr2[i];
+    }
+}
+
+void
+__bv_xor(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+    uint8_t *arr3 = dst->arr;
+    int count = dst->allocated;
+    for (int i = 0; i < count; i++) {
+        arr3[i] = arr1[i] ^ arr2[i];
+    }
+}
+
+void
+bv_print(struct bit_vector* bv)
+{
+    LOG(INFO, "bit_vector: %p size : %lu\n"
+        "arr       : %p\n", bv, bv->size, bv->arr);
+    int size = (bv->size >> 3) - 1 + ((bv->size & 7U) ? 1 : 0);
+    for (int i = size; i >= 0; --i) {
+        uint8_t val = bv->arr[i];
+        for (int j = 7; j >= 0; --j) 
+            printf("%u", val >> j & 1);
+        if (!(i & 3)) 
+            printf("\n");
+        else
+            printf(" ");
+    }
+    printf("\n");
 }
 
