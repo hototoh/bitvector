@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -Wall -O3 -msse4.2 -std=gnu99
+CFLAGS= -Wall -O3 -g -msse4.2 -std=gnu99
 
 .PHONY: clean all
 all: libbv test_bitvector
