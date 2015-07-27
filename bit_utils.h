@@ -23,6 +23,7 @@
 #define ROUNDUP32(x) (((x) + 31UL) & (~31UL))
 #define ROUNDUP64(x) (((x) + 63UL) & (~63UL))
 #define ROUNDUP128(x) (((x) + 127UL) & (~127UL))
+#define ROUNDUP256(x) (((x) + 255UL) & (~255UL))
 #define ROUNDUP4K(x) (((x) + 4095UL) & (~4095UL))
 #define ROUNDUP1M(x) (((x) + 1048575UL) & (~1048575UL))
 #define ROUNDUP2M(x) (((x) + 2097151UL) & (~2097151UL))

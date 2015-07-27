@@ -154,7 +154,7 @@ bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
 void
 _bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->allocated, bv2->allocated) >> 3;
+    int count = min(bv1->allocated, bv2->allocated);
  
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
@@ -167,7 +167,7 @@ _bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
 void
 _bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->allocated, bv2->allocated) >> 3;
+    int count = min(bv1->allocated, bv2->allocated);
  
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
@@ -180,7 +180,7 @@ _bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
 void
 _bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
 {
-    int count = min(bv1->allocated, bv2->allocated) >> 3;
+    int count = min(bv1->allocated, bv2->allocated);
  
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
