@@ -25,6 +25,7 @@ bv_create(elem_t bit_size)
 {
     struct bit_vector *bv;
     elem_t size = ROUNDUP128((ROUNDUP8(bit_size) >> 3));
+    //elem_t size = ROUNDUP256((ROUNDUP8(bit_size) >> 3));
     size_t msize = sizeof(struct bit_vector) +
                    sizeof(uint8_t) * size;
     bv = (struct bit_vector *) bv_malloc(msize);
@@ -47,9 +48,10 @@ void
 bv_prefetch(struct bit_vector* bv)
 {
     uint8_t* arr = bv->arr;
-    elem_t allocated = bv->allocated;
-    for (int i = 0; i < allocated; i += 8) 
-        rte_prefetch2(arr+i);
+    rte_prefetch2(arr);
+    //elem_t allocated = bv->allocated;
+    //for (int i = 0; i < allocated; i += 8) 
+    //    rte_prefetch2(arr+i);
 }
 
 void
@@ -201,7 +203,7 @@ __bv_and(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
 }
 
 void
-__bv_oror(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
+__bv_or(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
 {
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
