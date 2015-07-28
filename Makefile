@@ -1,8 +1,10 @@
 CC=gcc
 CFLAGS= -Wall -O3 -g -msse4.2 -std=gnu99
 
+OBJS = benchmark.o bitvector.o
+
 .PHONY: clean all
-all: libbv test_bitvector
+all: libbv benchmark test_bitvector
 
 .SUFFIXES: .c .o
 .c.o:
@@ -13,6 +15,9 @@ test_bitvector: test_bitvector.o libbv.a
 
 libbv: bitvector.o
 	$(AR) rcs $@.a $<
+
+benchmark: $(OBJS)
+	$(CC) $(CFLAGS) $^ -o benchmark
 
 clean:
 	rm -rf *.o *.a *~
