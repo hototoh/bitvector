@@ -11,6 +11,9 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <immintrin.h>
+#include <emmintrin.h>
+#include <xmmintrin.h>
 
 #include "common.h"
 #include "bit_utils.h"
@@ -19,6 +22,15 @@
 
 #define bv_malloc malloc
 #define bv_free free
+
+/*
+#ifdef __AVX2__
+#elif __SSE4_2__
+#elif __SSE4_1__
+#elif __SSE3__
+#elif __SSE2__
+#endif
+*/
 
 struct bit_vector*
 bv_create(elem_t bit_size)
@@ -191,7 +203,8 @@ _bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
 }
 
 void
-__bv_and(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
+bv_and_with_dst(struct bit_vector* dst,
+                struct bit_vector* bv1, struct bit_vector* bv2)
 {
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
@@ -203,7 +216,8 @@ __bv_and(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
 }
 
 void
-__bv_or(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
+bv_or_with_dst(struct bit_vector* dst,
+               struct bit_vector* bv1, struct bit_vector* bv2)
 {
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
@@ -215,7 +229,8 @@ __bv_or(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
 }
 
 void
-__bv_xor(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
+bv_xor_with_dst(struct bit_vector* dst,
+                struct bit_vector* bv1, struct bit_vector* bv2)
 {
     uint8_t *arr1 = bv1->arr;
     uint8_t *arr2 = bv2->arr;
@@ -226,6 +241,63 @@ __bv_xor(struct bit_vector* dst, struct bit_vector* bv1, struct bit_vector* bv2)
     }
 }
 
+void
+bv_multiple_and(struct bit_vector* dst,
+                struct bit_vector** bvs, int bv_num)
+{
+    int count = dst->allocated;
+    for (int i = 0; i < count; i+= 16) {
+        uint8_t *arr = dst->arr;
+        __m128i res = _mm_load_si128((__m128i*) (bvs[0]+i));
+        for (int j = 0; j < bv_num; ++j) {
+            __m128i vec = _mm_load_si128((__m128i*) (bvs[j]+i));
+            res = _mm_and_si128(res, vec);
+        }
+        _mm_store_si128((__m128i*)(arr+i), res);
+    }
+
+}
+
+void
+bv_multiple_and8(struct bit_vector* dst, struct bit_vector** bvs)
+{
+    int count = dst->allocated;
+    for (int i = 0; i < count; i+= 16) {
+        uint8_t *arr = dst->arr;
+        __m128i res = _mm_load_si128((__m128i*) (bvs[0]+i));
+        for (int j = 1; j < 8; ++j) {
+            __m128i vec = _mm_load_si128((__m128i*) (bvs[j]+i));            
+            res = _mm_and_si128(res, vec);
+        }
+        _mm_store_si128((__m128i*)(arr+i), res);
+    }
+}
+
+void
+bv_multiple_and16(struct bit_vector* dst, struct bit_vector** bvs)
+{
+    int count = dst->allocated;
+    for (int i = 0; i < count; i+= 16) {
+        uint8_t *arr = dst->arr;
+        
+       __m128i vec[16];
+        for (int j = 0; j < 8; ++j) 
+            vec[j] = _mm_load_si128((__m128i*) (bvs[j]+i));
+
+        for (int j = 0; j < 8; ++j)
+            vec[j] = _mm_and_si128(vec[j], vec[8+j]);
+        
+        for (int j = 0; j < 4; ++j) 
+            vec[j] = _mm_and_si128(vec[j], vec[4+j]);
+
+        for (int j = 0; j < 2; ++j) 
+            vec[j] = _mm_and_si128(vec[j], vec[2+j]);
+
+        vec[0] = _mm_and_si128(vec[0], vec[1]);
+        _mm_store_si128((__m128i*) (arr+i), vec[0]);
+    }
+}
+             
 void
 bv_print(struct bit_vector* bv)
 {

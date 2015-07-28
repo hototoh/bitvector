@@ -66,15 +66,25 @@ void
 _bv_xor(struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
-__bv_and(struct bit_vector* dst,
-         struct bit_vector* bv1, struct bit_vector* bv2);
+bv_and_with_dst(struct bit_vector* dst,
+                struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
-__bv_oror(struct bit_vector* dst,
-         struct bit_vector* bv1, struct bit_vector* bv2);
+bv_or_with_dst(struct bit_vector* dst,
+               struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
-__bv_xor(struct bit_vector* dst,
-         struct bit_vector* bv1, struct bit_vector* bv2);
+bv_xor_with_dst(struct bit_vector* dst,
+                struct bit_vector* bv1, struct bit_vector* bv2);
+
+void
+bv_multiple_and(struct bit_vector* dst,
+                struct bit_vector** bvs, int bv_num);
+
+void
+bv_multiple_and8(struct bit_vector* dst, struct bit_vector** bvs);
+
+void
+bv_multiple_and16(struct bit_vector* dst, struct bit_vector** bvs);
 
 #endif
