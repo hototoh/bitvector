@@ -36,8 +36,8 @@ struct bit_vector*
 bv_create(elem_t bit_size)
 {
     struct bit_vector *bv;
-    elem_t size = ROUNDUP128((ROUNDUP8(bit_size) >> 3));
-    //elem_t size = ROUNDUP256((ROUNDUP8(bit_size) >> 3));
+    //elem_t size = ROUNDUP128((ROUNDUP8(bit_size) >> 3));
+    elem_t size = ROUNDUP256((ROUNDUP8(bit_size) >> 3));
     size_t msize = sizeof(struct bit_vector) +
                    sizeof(uint8_t) * size;
     bv = (struct bit_vector *) bv_malloc(msize);
@@ -242,7 +242,39 @@ bv_xor_with_dst(struct bit_vector* dst,
 }
 
 void
-bv_multiple_and(struct bit_vector* dst,
+bv_and_with_dst_128(struct bit_vector* dst,
+                    struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+    uint8_t *arr3 = dst->arr;
+    int count = dst->allocated;
+    for (int i = 0; i < count; i+= 32) {
+        __m128i v1 = _mm_load_si128((__m128i*) (arr1+i));
+        __m128i v2 = _mm_load_si128((__m128i*) (arr2+i));
+        __m128i res = _mm_and_si128(v1, v2);
+        _mm_store_si128((__m128i*)(arr3+i), res);
+    }
+}
+
+void
+bv_and_with_dst_256(struct bit_vector* dst,
+                    struct bit_vector* bv1, struct bit_vector* bv2)
+{
+    uint8_t *arr1 = bv1->arr;
+    uint8_t *arr2 = bv2->arr;
+    uint8_t *arr3 = dst->arr;
+    int count = dst->allocated;
+    for (int i = 0; i < count; i+= 32) {
+        __m256i v1 = _mm256_load_si256((__m256i*) (arr1+i));
+        __m256i v2 = _mm256_load_si256((__m256i*) (arr2+i));
+        __m256i res = _mm256_and_si256((__m256i) v1, (__m256i)v2);
+        _mm256_store_si256((__m256i*)(arr3+i), res);
+    }
+}
+
+void
+bv_multiple_and_128(struct bit_vector* dst,
                 struct bit_vector** bvs, int bv_num)
 {
     uint8_t *arrs[bv_num];
@@ -259,6 +291,28 @@ bv_multiple_and(struct bit_vector* dst,
             res = _mm_and_si128(res, vec);
         }
         _mm_store_si128((__m128i*)(arr+i), res);
+    }
+
+}
+
+void
+bv_multiple_and_256(struct bit_vector* dst,
+                struct bit_vector** bvs, int bv_num)
+{
+    uint8_t *arrs[bv_num];
+    for (int i = 0; i < bv_num; ++i) {
+        arrs[i] = bvs[i]->arr;
+    }
+
+    int count = dst->allocated;
+    for (int i = 0; i < count; i+= 16) {
+        uint8_t *arr = dst->arr;
+        __m256i res = _mm256_load_si256((__m256i*) (arrs[0]+i));
+        for (int j = 0; j < bv_num; ++j) {
+            __m256i vec = _mm256_load_si256((__m256i*) (arrs[j]+i));
+            res = _mm256_and_si256((__m256i) res, (__m256i)vec);
+        }
+        _mm256_store_si256((__m256i*)(arr+i), res);
     }
 
 }

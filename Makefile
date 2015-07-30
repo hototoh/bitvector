@@ -1,10 +1,11 @@
 CC=gcc
-CFLAGS= -Wall -O3 -g -msse4.2 -std=gnu99
+CFLAGS= -Wall -O3 -g -msse4.2 -mavx -mavx2 -std=gnu99
 
 OBJS = benchmark.o bitvector.o
 
 .PHONY: clean all
 all: libbv benchmark test_bitvector
+#all: libbv test_bitvector
 
 .SUFFIXES: .c .o
 .c.o:

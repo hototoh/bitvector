@@ -78,6 +78,14 @@ bv_xor_with_dst(struct bit_vector* dst,
                 struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
+bv_and_with_dst_128(struct bit_vector* dst,
+                struct bit_vector* bv1, struct bit_vector* bv2);
+
+void
+bv_and_with_dst_256(struct bit_vector* dst,
+                struct bit_vector* bv1, struct bit_vector* bv2);
+
+void
 bv_multiple_and(struct bit_vector* dst,
                 struct bit_vector** bvs, int bv_num);
 
