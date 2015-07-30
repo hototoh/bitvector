@@ -57,13 +57,13 @@ struct bit_vector*
 bv_xor(struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
-_bv_and(struct bit_vector* bv1, struct bit_vector* bv2);
+bv_and_overwirte(struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
-_bv_or(struct bit_vector* bv1, struct bit_vector* bv2);
+bv_or_overwirte(struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
-_bv_xor(struct bit_vector* bv1, struct bit_vector* bv2);
+bv_xor_overwirte(struct bit_vector* bv1, struct bit_vector* bv2);
 
 void
 bv_and_with_dst(struct bit_vector* dst,

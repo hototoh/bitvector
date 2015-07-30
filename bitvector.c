@@ -164,7 +164,7 @@ bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
 }
 
 void
-_bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
+bv_and_overwirte(struct bit_vector* bv1, struct bit_vector* bv2)
 {
     int count = min(bv1->allocated, bv2->allocated);
  
@@ -177,7 +177,7 @@ _bv_and(struct bit_vector* bv1, struct bit_vector* bv2)
 }
 
 void
-_bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
+bv_or_overwirte(struct bit_vector* bv1, struct bit_vector* bv2)
 {
     int count = min(bv1->allocated, bv2->allocated);
  
@@ -190,7 +190,7 @@ _bv_or(struct bit_vector* bv1, struct bit_vector* bv2)
 }
 
 void
-_bv_xor(struct bit_vector* bv1, struct bit_vector* bv2)
+bv_xor_overwirte(struct bit_vector* bv1, struct bit_vector* bv2)
 {
     int count = min(bv1->allocated, bv2->allocated);
  
@@ -245,12 +245,17 @@ void
 bv_multiple_and(struct bit_vector* dst,
                 struct bit_vector** bvs, int bv_num)
 {
+    uint8_t *arrs[bv_num];
+    for (int i = 0; i < bv_num; ++i) {
+        arrs[i] = bvs[i]->arr;
+    }
+
     int count = dst->allocated;
     for (int i = 0; i < count; i+= 16) {
         uint8_t *arr = dst->arr;
-        __m128i res = _mm_load_si128((__m128i*) (bvs[0]+i));
+        __m128i res = _mm_load_si128((__m128i*) (arrs[0]+i));
         for (int j = 0; j < bv_num; ++j) {
-            __m128i vec = _mm_load_si128((__m128i*) (bvs[j]+i));
+            __m128i vec = _mm_load_si128((__m128i*) (arrs[j]+i));
             res = _mm_and_si128(res, vec);
         }
         _mm_store_si128((__m128i*)(arr+i), res);
@@ -261,12 +266,17 @@ bv_multiple_and(struct bit_vector* dst,
 void
 bv_multiple_and8(struct bit_vector* dst, struct bit_vector** bvs)
 {
+    uint8_t *arrs[8];
+    for (int i = 0; i < 8; ++i) {
+        arrs[i] = bvs[i]->arr;
+    }
+
     int count = dst->allocated;
+    uint8_t *arr = dst->arr;
     for (int i = 0; i < count; i+= 16) {
-        uint8_t *arr = dst->arr;
-        __m128i res = _mm_load_si128((__m128i*) (bvs[0]+i));
+        __m128i res = _mm_load_si128((__m128i*) (arrs[0]+i));
         for (int j = 1; j < 8; ++j) {
-            __m128i vec = _mm_load_si128((__m128i*) (bvs[j]+i));            
+            __m128i vec = _mm_load_si128((__m128i*) (arrs[j]+i));            
             res = _mm_and_si128(res, vec);
         }
         _mm_store_si128((__m128i*)(arr+i), res);
