@@ -15,10 +15,9 @@
 #include <time.h>
 #include <errno.h>
 
-#include "array_lookup.h"
-#include "radixtrie.h"
 #include "common.h"
-
+#include "bit_utils.h"
+#include "bitvector.h"
 #ifndef ERR
 #define ERR
 #endif
@@ -177,50 +176,120 @@ err0:
     return NULL;
 }
 
-
-
+/*
 void
-performance_test(struct multi_bv_arrays* mbarr,
-                 testset* testsets, int test_num)
+bv_and_performance(struct bit_vector** bvs0, struct bit_vector** bvs1,
+                   testset* testsets, int test_num)
 {
     uint64_t dummy = 0;
+    printf("bvs0[0]->size: %lu\n", bvs0[0]->size);
+    struct bit_vector* dst = bv_create(bvs0[0]->size);
+    if (dst == NULL) {
+        LOG(ERR, "Failed to allocate dst bit vector\n");
+        return ;
+    }
+
     double start = NOW();
     for (int i = 0; i < test_num; i++) {        
-        struct bit_vector* bv = mbvs_lookup(mbarr, (uint8_t*) &testsets[i]);
-        dummy += bv_ffs(bv);
-        bv_destroy(bv);
+        struct bit_vector* bv0 = bvs0[i];
+        struct bit_vector* bv1 = bvs1[i];
+        bv_and_with_dst_128(dst, bv0, bv1);
+        dummy += dst->arr[testsets[i]];
     }
     double end = NOW();
-    printf("dummy_print: %llu\n", dummy);
+
+    bv_destroy(dst);
+    printf("dummy_print: %lu\n", dummy);
     DISPLAY(test_num, start, end);
+    return ;
+}
+*/
+
+void
+bv_and_performance(struct bit_vector** bvs0, testset* testsets, int test_num)
+{
+    uint64_t dummy = 0;
+    struct bit_vector* dst = bv_create(bvs0[0]->size);
+    if (dst == NULL) {
+        LOG(ERR, "Failed to allocate dst bit vector\n");
+        return ;
+    }
+
+    LOG(INFO, "start warm_up performance \n");
+    for (int i = 0; i < test_num-1; ++i) {
+        struct bit_vector* bv0 = bvs0[i];
+        struct bit_vector* bv1 = bvs0[i+1];
+        bv_and_with_dst_128(dst, bv0, bv1);
+    }
+    LOG(INFO, "[SUCCESS] performance test\n\n");
+
+    int count = 16000;
+    double start = NOW();
+    for (int j = 0; j < count; ++j) {
+        for (int i = 0; i < test_num; i++) {        
+            int rand_index = testsets[i];
+            struct bit_vector* bvs[8];
+            
+            bvs[0] = bvs0[i];
+            bvs[1] = bvs0[(i+j+1) & (test_num-1)];
+            bvs[2] = bvs0[(i+(j+1)*2) & (test_num-1)];
+            bvs[3] = bvs0[(i+(j+1)*3) & (test_num-1)];
+            
+            bvs[4] = bvs0[(i+(j+1)*4) & (test_num-1)];
+            bvs[5] = bvs0[(i+(j+1)*5) & (test_num-1)];
+            bvs[6] = bvs0[(i+(j+1)*6) & (test_num-1)];
+            bvs[7] = bvs0[(i+(j+1)*7) & (test_num-1)];
+            bv_multiple_and_256(dst, bvs, 8);
+            //*/
+            //bv_multiple_and_256(dst, bvs, 4);
+            //bv_multiple_and_128(dst, bvs, 4);
+            /*
+            struct bit_vector* bv0 = bvs0[i];
+            struct bit_vector* bv1 = bvs0[(rand_index+j) & (test_num-1)];
+            bv_and_with_dst_256(dst, bv0, bv1);
+            */
+            dummy += dst->arr[rand_index];
+        }
+    }
+    double end = NOW();
+
+    bv_destroy(dst);
+    printf("dummy_print: %lu\n", dummy);
+    DISPLAY(test_num*count, start, end);
     return ;
 }
 
 bool
-gen_testset(testset** testsets, int test_num)
+gen_bitvectors(struct bit_vector*** bvs, int bv_size, int bv_num)
 {
-    testset *tsets = (testset *) malloc(sizeof(testset) * test_num);
-    if (tsets == NULL) return false;
+    struct bit_vector ** tmp = (struct bit_vector **) malloc(sizeof(struct bit_vector*) * bv_num);
+    if (tmp == NULL) return false;
 
-    for (int i = 0; i < test_num; ++i) {
-        uint32_t res = 0;
-        for (int j = 0; j < 4; ++j) {
+    for (int i = 0; i < bv_num; ++i) {
+        tmp[i] = bv_create(bv_size);
+        if (tmp[i] == NULL) goto out;
+
+        int byte = (tmp[i]->size) >> 3;
+        for (int j = 0; j < byte; ++j) {
             int rand_num = rand() & 255UL;
-            res <<= 8;
-            res += rand_num;
+            tmp[i]->arr[j] = rand_num;
         }
-        tsets[i] = (testset) res;
     }
-    *testsets = tsets;
-        
+    *bvs = tmp; 
     return true;
+out:
+    for (int i = 0; i < bv_num; ++i) {
+        if (tmp[i]) bv_destroy(tmp[i]);
+    }
+    free(tmp);
+    return false;
 }
 
 void
 print_usage()
 {
     printf("Usage: ./benchmark"
-           " <bitvector size> <testset num> [<batch_num> = 1]\n");
+           " <bitvector size> <num>\n");
 }
 
 int 
@@ -233,57 +302,66 @@ main(int argc, char **argv)
         print_usage();
         exit(1);
     }
+    int bv_size = atoi(argv[1]);
+    int bv_num = atoi(argv[2]);
 
-    int batch_num;
-    if (argc >= 4) {
-        batch_num = atoi(argv[3]);
+    LOG(INFO, "generate testset\n");
+    testset* testsets = (testset *) malloc(sizeof(testset) * bv_num);
+    if (testsets == NULL) {
+        printf("Failed to genereate testsets\n");
+        return 1;
+    }
+    
+    int byte_size = ROUNDUP8(bv_size) >> 3;
+    for (int i = 0; i < bv_num; ++i) {
+        testsets[i] = rand() % byte_size;
     }
 
-    int test_num = atoi(argv[2]);
-    testset* testsets;
-    if(!gen_testset(&testsets, test_num)) {
+    //struct bit_vector** bvs = NULL, **bvss = NULL;
+    //if(!gen_bitvectors(&bvs, bv_size, bv_num)
+    //   || 
+    //   !gen_bitvectors(&bvss, bv_size, bv_num)) {
+    //    LOG(ERR, "Failed to generate testset.");
+    //    goto err0;
+    //}
+    struct bit_vector** bvs = NULL;
+    if(!gen_bitvectors(&bvs, bv_size, bv_num)) {
         LOG(ERR, "Failed to generate testset.");
         goto err0;
     }
-
-    LOG(INFO, "parse confg rules\n");
-    struct prefix_match_rules *config_rules = parse_rules(argv[1]);
-    if (config_rules == NULL) {
-        LOG(ERR, "Failed to parse rules.\n");
-        goto err1;
-    }
-    LOG(INFO, "[SUCCESS] parsed confg rules\n\n");
-    
-    int count = config_rules->count;
-    LOG(INFO, "create multi_bv_arrays(4, %d)\n", count);
-    struct multi_bv_arrays *mbarr = mbvs_create(4, count);
-    if (mbarr == NULL) {
-        LOG(ERR, "Failed to create multi_bv_arrays.\n");
-        goto err2;
-    }
-
-    for (int i = 0; i < count; i++) {
-        struct prefix_match_rule* rule = &config_rules->arr[i];
-        uint32_t rule_id = rule->id;
-        uint32_t ip_address = rule->ip_address;
-        uint32_t prefix_len = rule->prefix_len;
-        uint8_t *ip_addrs = (uint8_t*)&ip_address;
-        mbvs_add_rules(mbarr, ip_addrs, prefix_len, rule_id);
-    }
-    LOG(INFO, "[SUCCESS] setup finished.\n\n");
-    
+    LOG(INFO, "[SUCCESS] generate testset\n\n");
+        
     LOG(INFO, "start performance test\n");
-    performance_test(mbarr, testsets, test_num);
+    bv_and_performance(bvs, testsets, bv_num);
     LOG(INFO, "[SUCCESS] performance test\n\n");
 
-    free(testsets);
-    mbvs_destroy(mbarr);
-    destroy_prefix_match_rules(config_rules);
+    /*
+    if (bvss) {
+        for (int i = 0; i < bv_num; ++i) {
+            if (bvss[i]) bv_destroy(bvss[i]);
+        }
+        free(bvss);
+    }
+    */
+    for (int i = 0; i < bv_num; ++i) {
+        if (bvs[i]) bv_destroy(bvs[i]);
+    }
+    free(bvs);
     return 0;
-err2:
-    destroy_prefix_match_rules(config_rules);
-err1:
-    free(testsets);
+
 err0:
+    /*
+    if (bvss) {
+        for (int i = 0; i < bv_num; ++i) {
+            if (bvss[i]) bv_destroy(bvss[i]);
+        }
+        free(bvss);
+    }
+    */
+    for (int i = 0; i < bv_num; ++i) {
+        if (bvs[i]) bv_destroy(bvs[i]);
+    }
+    free(bvs);
+
     return 1;
 }

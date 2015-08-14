@@ -19,7 +19,7 @@ struct bit_vector {
     elem_t size; 
     
     // bit vector body
-    uint8_t arr[0] __attribute__((aligned(16)));
+    uint8_t arr[0] __attribute__((aligned(32)));
 };
 
 void
@@ -90,9 +90,12 @@ bv_multiple_and(struct bit_vector* dst,
                 struct bit_vector** bvs, int bv_num);
 
 void
-bv_multiple_and8(struct bit_vector* dst, struct bit_vector** bvs);
+bv_multiple_and_128(struct bit_vector* dst,
+                    struct bit_vector** bvs, int bv_num);
 
 void
-bv_multiple_and16(struct bit_vector* dst, struct bit_vector** bvs);
+bv_multiple_and_256(struct bit_vector* dst,
+                    struct bit_vector** bvs, int bv_num);
+
 
 #endif
